@@ -16,10 +16,11 @@ class RedcapTable:
     @staticmethod
     def get_table_by_name(name):
         if name not in config['datasources']:
-            raise Exception(name + ' is not available.')
+            raise Exception(name + ' is not available, try one of ', list(config['datasources'].keys()))
 
         ds = config['datasources'][name]
-        return RedcapTable(ds['token'], ds['url'])
+        url = ds.get('url', default_url)
+        return RedcapTable(ds['token'], url)
 
     def post(self, payload):
         data = payload.copy()
