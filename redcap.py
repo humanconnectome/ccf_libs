@@ -83,10 +83,10 @@ class RedcapTable:
 
 
 def get_behavioral_ids(keep_parents=False):
-    dfs = []
-    for study in config['behavioral'].keys():
-        if study != 'hcpdparents' or keep_parents:
-            dfs.append(get_behavioral(study))
+    dfs = [ get_behavioral(study) \
+             for study in config['behavioral'].keys() \
+                 if study != 'hcpdparents' or keep_parents
+          ]
 
     return pd.concat(dfs, sort=False, ignore_index=True)
 
