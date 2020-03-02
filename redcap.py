@@ -84,24 +84,9 @@ class RedcapTable:
 
 def get_behavioral_ids(keep_parents=False):
     dfs = []
-    for study, s in config['behavioral'].items():
-        if study == 'hcpdparents' and not keep_parents:
-            continue
-        fieldnames = s['fields']
-        events = s['events']
-        table = RedcapTable(s['token'])
-        fields = list(fieldnames.values())
-        df = table.get_frame(fields, events)
-        df.rename(columns={
-            fieldnames['interview_date']: 'interview_date',
-            fieldnames['field']: 'subjectid'
-        }, inplace=True)
-        df = df[df.subjectid.notna() & (df.subjectid != '')]
-        split_df = df.subjectid.str.split("_", 1, expand=True)
-        df['subject'] = split_df[0].str.strip()
-        df['flagged'] = split_df[1].str.strip()
-        df['study'] = study
-        dfs.append(df)
+    for study in config['behavioral'].keys():
+        if study != 'hcpdparents' or keep_parents:
+            dfs.append(get_behavioral(study))
 
     return pd.concat(dfs, sort=False, ignore_index=True)
 
