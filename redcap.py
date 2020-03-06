@@ -90,7 +90,7 @@ def get_behavioral_ids(keep_parents=False):
 
     return pd.concat(dfs, sort=False, ignore_index=True)
 
-def get_behavioral(study, fields=None):
+def get_behavioral(study, fields=None, keep_withdrawn=False):
     if study not in config['behavioral']:
         #throw Exception('This study is not available. ' + study)
         print('Error', 'This study is not available.', study)
@@ -112,6 +112,9 @@ def get_behavioral(study, fields=None):
     df['subject'] = split_df[0].str.strip()
     df['flagged'] = split_df[1].str.strip()
     df['study'] = study
+
+    if not keep_withdrawn:
+        df = df[df.flagged.isna()]
 
     interview_date = pd.to_datetime(df.interview_date)
     dob = pd.to_datetime(df.dob)
