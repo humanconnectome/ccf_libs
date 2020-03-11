@@ -100,7 +100,7 @@ def get_behavioral(study, fields=None, keep_withdrawn=False):
     fieldnames = s['fields']
     events = s['events']
     table = RedcapTable(s['token'])
-    fields = fields if fields else []
+    fields = fields.copy() if fields else []
     fields += list(fieldnames.values())
     df = table.get_frame(fields, events)
     df.rename(columns={
