@@ -29,6 +29,22 @@ class RedcapTable:
         r = requests.post(self.url, data)
         return r
 
+    def get_datadictionary(self, fields=None, forms=None):
+        data = {
+            'format': 'csv',
+            'content': 'metadata',
+            'returnFormat': 'json',
+        }
+        if fields:
+            data['fields[]'] = fields
+
+        if forms:
+            data['forms[]'] = forms
+
+        r = self.post(data)
+        r = io.BytesIO(r.content)
+        return pd.read_csv(r, encoding='utf8', low_memory=False)
+
     def get_frame(self, fields=None, events=None, forms=None):
         data = {
             'format': 'csv',
