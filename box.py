@@ -185,13 +185,16 @@ class LifespanBox:
         except UnicodeDecodeError:
             return f.decode('UTF-8')
 
-    def downloadFile(self, fileId, downloadDir=None, override=False):
-        downloadDir = downloadDir or self.cache
+    def downloadFile(self, fileId, download_dir=None, override_if_exists=False):
+        """
+        Downloads a single file to cache space or provided directory
+        """
+        download_dir = download_dir or self.cache
 
         file = self.getFileById(fileId)
-        path = os.path.join(downloadDir, file.get().name)
+        path = os.path.join(download_dir, file.get().name)
 
-        if os.path.exists(path) and not override:
+        if os.path.exists(path) and not override_if_exists:
             return path
 
         with open(path, "wb+") as fd:
@@ -239,6 +242,12 @@ class LifespanBox:
         return file
 
     def update_file(self, file_id, file_path, rename=True):
+        """
+        Alias of `update_version`.
+        """
+        return self.update_version(file_id, file_path, rename)
+
+    def update_version(self, file_id, file_path, rename=True):
         """
         Upload a new version of an existing file by file_id
         """
