@@ -169,6 +169,14 @@ class LifespanBox:
         file = self.getFileById(fileId)
         return io.BytesIO(file.content())
 
+    def read_csv(self, fileId):
+        """ Read a csv file into a pandas dataframe, without storing a cached version."""
+        return pd.read_csv(self.readFile(fileId))
+
+    def read_excel(self, fileId):
+        """ Read an excel file into a pandas dataframe, without storing a cached version."""
+        return pd.read_excel(self.readFile(fileId))
+
     def read_text(self, fileId):
         f = self.getFileById(fileId).content()
 
