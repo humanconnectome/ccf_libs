@@ -26,7 +26,7 @@ class RedcapTable:
         url = ds.get('url', default_url)
         return RedcapTable(ds['token'], url)
 
-    def post(self, payload):
+    def __post(self, payload):
         """
         Internal function. Sends POST request to redcap server.
         """
@@ -44,13 +44,10 @@ class RedcapTable:
             'content': 'metadata',
             'returnFormat': 'json',
         }
-        if fields:
-            data['fields[]'] = fields
+        if fields: data['fields[]'] = fields
+        if forms: data['forms[]'] = forms
 
-        if forms:
-            data['forms[]'] = forms
-
-        r = self.post(data)
+        r = self.__post(data)
         r = io.BytesIO(r.content)
         return pd.read_csv(r, encoding='utf8', low_memory=False)
 
@@ -69,21 +66,16 @@ class RedcapTable:
             'exportSurveyFields': 'false',
             'exportDataAccessGroups': 'false',
         }
-        if fields:
-            data['fields[]'] = fields
+        if fields: data['fields[]'] = fields
+        if events: data['events[]'] = events
+        if forms: data['forms[]'] = forms
 
-        if events:
-            data['events[]'] = events
-
-        if forms:
-            data['forms[]'] = forms
-
-        r = self.post(data)
+        r = self.__post(data)
         r = io.BytesIO(r.content)
         return pd.read_csv(r, encoding='utf8', parse_dates=True, low_memory=False)
 
     def send_frame(self, dataframe, overwrite=True):
-        r = self.post({
+        r = self.__post({
             'content': 'record',
             'format': 'csv',
             'type': 'flat',
@@ -94,17 +86,17 @@ class RedcapTable:
         })
         return r
 
-    def delete_records(self, records):
+    def delete_records(self, recordIds):
         """
         Delete a list of records
         """
-        if not isinstance(records, list):
-            records = [records]
+        if not isinstance(recordIds, list):
+            recordIds = [recordIds]
 
-        r = self.post({
+        r = self.__post({
             'action': 'delete',
             'content': 'record',
-            'records[]': records
+            'records[]': recordIds
         })
         return r
 
@@ -113,7 +105,7 @@ class RedcapTable:
         If the current table is set to autogenerate new IDs, this function
         will return the id of the next record.
         """
-        n = int(self.post({'content': 'generateNextRecordName'}).content)
+        n = int(self.__post({'content': 'generateNextRecordName'}).content)
         return list(range(n, n+count))
 
 
