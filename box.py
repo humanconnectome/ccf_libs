@@ -48,6 +48,9 @@ class LifespanBox:
         return Client(auth)
 
     def list_of_files(self, folders, extension='.csv', recursively=True):
+        """
+        A legacy function.
+        """
         result = {}
 
         for folder_id in folders:
@@ -162,6 +165,11 @@ class LifespanBox:
         return matches
 
     def getFileById(self, fileId):
+        """
+        Get box file instance.
+        To get content use `.content()`.
+        Other metadata is available via `.get()`.
+        """
         return self.client.file(file_id=str(fileId))
 
     def readFile(self, fileId):
@@ -178,6 +186,7 @@ class LifespanBox:
         return pd.read_excel(self.readFile(fileId))
 
     def read_text(self, fileId):
+        """ Read a text file into a string, without storing a cached version."""
         f = self.getFileById(fileId).content()
 
         try:
@@ -274,6 +283,10 @@ class LifespanBox:
         return match
 
     def Box2dataframe(self, curated_fileid_start):
+        """
+        A Legacy function.
+        """
+
         # get current best curated data from BOX (a csv with one header row)
         # and read into pandas dataframe for QC
         raw_fileid = curated_fileid_start

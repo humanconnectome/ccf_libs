@@ -16,6 +16,9 @@ class RedcapTable:
 
     @staticmethod
     def get_table_by_name(name):
+        """
+        Create a new instance of RedcapTable by name. Table must exist in the config datasources.
+        """
         if name not in config['datasources']:
             raise Exception(name + ' is not available, try one of ', list(config['datasources'].keys()))
 
@@ -24,12 +27,18 @@ class RedcapTable:
         return RedcapTable(ds['token'], url)
 
     def post(self, payload):
+        """
+        Internal function. Sends POST request to redcap server.
+        """
         data = payload.copy()
         data['token'] = self.token
         r = requests.post(self.url, data)
         return r
 
     def get_datadictionary(self, fields=None, forms=None):
+        """
+        Download the datadictionary for the current table.
+        """
         data = {
             'format': 'csv',
             'content': 'metadata',
@@ -46,6 +55,9 @@ class RedcapTable:
         return pd.read_csv(r, encoding='utf8', low_memory=False)
 
     def get_frame(self, fields=None, events=None, forms=None):
+        """
+        Request the data from Redcap straight into a Pandas DataFrame.
+        """
         data = {
             'format': 'csv',
             'content': 'record',
@@ -83,6 +95,9 @@ class RedcapTable:
         return r
 
     def delete_records(self, records):
+        """
+        Delete a list of records
+        """
         if not isinstance(records, list):
             records = [records]
 
@@ -94,6 +109,10 @@ class RedcapTable:
         return r
 
     def generate_next_record_ids(self, count=1):
+        """
+        If the current table is set to autogenerate new IDs, this function
+        will return the id of the next record.
+        """
         n = int(self.post({'content': 'generateNextRecordName'}).content)
         return list(range(n, n+count))
 
