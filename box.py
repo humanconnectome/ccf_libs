@@ -18,7 +18,7 @@ class LifespanBox:
         self.cache = cache
         self.config_file = config_file
         if not os.path.exists(cache):
-            os.mkdir(cache)
+            os.mkdirs(cache, exist_ok=True)
         self.client = self.get_client()
 
     def get_client(self):
