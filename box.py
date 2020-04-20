@@ -211,21 +211,6 @@ class LifespanBox:
 
         return path
 
-
-    def download_file(self, file_id):
-        """
-        Downloads a single file to cache space or provided directory
-        """
-
-        f = self.client.file(file_id=str(file_id))
-        print(f.get().name)
-        file_path = os.path.join(self.cache, f.get().name)
-
-        with open(file_path, 'wb') as out:
-            out.write(f.content())
-
-        return f
-
     def download_files(self, file_ids, directory=None, workers=20):
         """
         Takes a list of file ids and downloads them all to cache space or user
@@ -301,15 +286,3 @@ class LifespanBox:
         # raw['InstEndedDatetime']=pd.to_datetime(raw.InstEnded).dt.round('min')
         return raw
 
-
-if __name__ == '__main__':
-    box = LifespanBox()
-
-    results = box.search(
-        pattern='-Aging_scores.csv',
-        limit=10,
-        maxresults=10
-    )
-    for r in results[0:49]:
-        print(r)
-    print('^ {} results'.format(len(results)))
