@@ -5,7 +5,7 @@ from multiprocessing.dummy import Pool
 import pandas as pd
 from boxsdk import JWTAuth, OAuth2, Client
 
-from ccf.config import LoadSettings
+from .config import LoadSettings
 
 config = LoadSettings()
 

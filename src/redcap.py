@@ -3,7 +3,7 @@ import io
 import pandas as pd
 import requests
 
-from ccf.config import LoadSettings
+from .config import LoadSettings
 
 config = LoadSettings()['Redcap']
 default_url = config['api_url']
