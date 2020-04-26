@@ -30,13 +30,13 @@ def __not_equal__(a, b):
 
 class Memoizable:
     def __init__(self, cache_file='.cache', expire_in_days=7, hashfunc=None):
-        self.cache_file = cache_file
+        self.__cache_file__ = cache_file
         self.cache = {}
-        self.expire_in = expire_in_days * 60 * 60 * 24
+        self.__expire_in__ = expire_in_days * 60 * 60 * 24
         if hashfunc is not None:
-            self.current_stamp = hashfunc
-            self.expiration_stamp = None
-            self.is_expired = __not_equal__
+            self.__current_stamp__ = hashfunc
+            self.__expiration_stamp__ = None
+            self.__is_expired__ = __not_equal__
         self.load_cache()
 
     def __call__(self, *args):
@@ -45,11 +45,11 @@ class Memoizable:
             return self.execute(*args)
 
         cached = self.cache.get(args, None)
-        current = self.current_stamp(*args)
+        current = self.__current_stamp__(*args)
         if cached is None or self.is_expired(cached[1], current):
             value = self.execute(*args)
-            if self.expiration_stamp is not None:
-                current = self.expiration_stamp(*args)
+            if self.__expiration_stamp__ is not None:
+                current = self.__expiration_stamp__(*args)
             self.cache[args] = value, current
             self.save_cache()
             return value
@@ -57,14 +57,14 @@ class Memoizable:
             return copy.deepcopy(self.cache[args][0])
 
     def load_cache(self):
-        if os.path.exists(self.cache_file):
-            with open(self.cache_file, 'rb') as fd:
+        if os.path.exists(self.__cache_file__):
+            with open(self.__cache_file__, 'rb') as fd:
                 self.cache = pickle.load(fd)
         else:
             self.cache = {}
 
     def save_cache(self, cache_file=None):
-        if cache_file is None: cache_file = self.cache_file
+        if cache_file is None: cache_file = self.__cache_file__
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
@@ -72,13 +72,13 @@ class Memoizable:
         raise Exception("Executor not yet defined.")
         return False
 
-    def is_expired(self, cached, current):
+    def __is_expired__(self, cached, current):
         return current > cached
 
-    def current_stamp(self, *args):
+    def __current_stamp__(self, *args):
         return time.time()
 
-    def expiration_stamp(self, *args):
+    def __expiration_stamp__(self, *args):
         return time.time() + self.expire_in
 
 
