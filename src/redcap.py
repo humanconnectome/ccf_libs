@@ -1,18 +1,64 @@
+import os
+import re
 import numpy as np
 import io
 import pandas as pd
 import requests
 
+from .easy_yaml import EasyYaml
 from .config import LoadSettings
 
 config = LoadSettings()['Redcap']
 default_url = config['api_url']
+Y = EasyYaml(".redcap_cache")
+
+
+def convert_to_number(x):
+    try:
+        return int(x)
+    except ValueError:
+        try:
+            return float(x)
+        except ValueError:
+            return x
+
+
+redcap_choices_regex = re.compile(r'([^,]+), *([^|]+?)(?: *\||$)')
+split_regex = re.compile(r'^(\S)', re.MULTILINE)
+
+
+def choices(string):
+    return {
+        convert_to_number(k.strip()): v.strip()
+        for k, v in redcap_choices_regex.findall(string)
+    }
+
+
+new_col_names = ['name', 'form', 'section', 'type', 'label', 'choices', 'note', 'validation', 'val_min', 'val_max',
+                 'identifier', 'branching', 'required', 'alignment', 'qnum', 'matrix', 'matrix_rank', 'annotation']
+
+
+def to_dict(df):
+    df.columns = new_col_names
+    elements = df.set_index('name').to_dict('index')
+    newlist = {}
+    for name, e in elements.items():
+        # delete NaN
+        e = {k: v for k, v in e.items() if pd.notna(v)}
+
+        # split choices
+        if e.get('type') in ['checkbox', 'radio', 'dropdown']:
+            e['choices'] = choices(e['choices'])
+
+        newlist[name] = e
+    return newlist
 
 
 class RedcapTable:
-    def __init__(self, token, url = None):
+    def __init__(self, token, url=None, name=None):
         self.url = url if url else default_url
         self.token = token
+        self.name = name if name else 'Unknown'
 
     @staticmethod
     def get_table_by_name(name):
@@ -24,7 +70,7 @@ class RedcapTable:
 
         ds = config['datasources'][name]
         url = ds.get('url', default_url)
-        return RedcapTable(ds['token'], url)
+        return RedcapTable(ds['token'], url, name)
 
     def __post(self, payload):
         """
@@ -50,6 +96,18 @@ class RedcapTable:
         r = self.__post(data)
         r = io.BytesIO(r.content)
         return pd.read_csv(r, encoding='utf8', low_memory=False)
+
+    def download_datadictionary(self, directory="./definitions/", fields=None, forms=None):
+        """
+        Download datadictionary as yaml to directory
+        :param directory:
+        :param fields:
+        :param forms:
+        :return:
+        """
+        results = self.get_datadictionary(fields, forms)
+        filename = os.path.join(directory, self.name + '.yaml')
+        Y.write(filename, to_dict(results))
 
     def get_frame(self, fields=None, events=None, forms=None):
         """
@@ -106,20 +164,21 @@ class RedcapTable:
         will return the id of the next record.
         """
         n = int(self.__post({'content': 'generateNextRecordName'}).content)
-        return list(range(n, n+count))
+        return list(range(n, n + count))
 
 
 def get_behavioral_ids(keep_parents=False):
-    dfs = [ get_behavioral(study) \
-             for study in config['behavioral'].keys() \
-                 if study != 'hcpdparents' or keep_parents
-          ]
+    dfs = [get_behavioral(study) \
+           for study in config['behavioral'].keys() \
+           if study != 'hcpdparents' or keep_parents
+           ]
 
     return pd.concat(dfs, sort=False, ignore_index=True)
 
+
 def get_behavioral(study, fields=None, keep_withdrawn=False):
     if study not in config['behavioral']:
-        #throw Exception('This study is not available. ' + study)
+        # throw Exception('This study is not available. ' + study)
         print('Error', 'This study is not available.', study)
         return {}
 
@@ -156,10 +215,11 @@ def get_behavioral(study, fields=None, keep_withdrawn=False):
 
     return df
 
+
 def get_full(study, keep_withdrawn=False):
     s = config['behavioral'][study]
     table = RedcapTable(s['token'])
-    df = table.get_frame(events = s['events'])
+    df = table.get_frame(events=s['events'])
     fieldnames = s['fields']
     df.rename(columns={
         fieldnames['interview_date']: 'interview_date',
