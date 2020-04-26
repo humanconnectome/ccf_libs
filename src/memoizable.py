@@ -13,6 +13,7 @@ def hashable(item):
         return False
     return True
 
+
 def sha256(filename):
     """
     Digest a file using sha256
@@ -23,6 +24,7 @@ def sha256(filename):
         while chunk := f.read(8192):
             sha256_hash.update(chunk)
     return sha256_hash.hexdigest()
+
 
 def __not_equal__(a, b):
     return a != b
@@ -46,7 +48,7 @@ class Memoizable:
 
         cached = self.cache.get(args, None)
         current = self.__current_stamp__(*args)
-        if cached is None or self.is_expired(cached[1], current):
+        if cached is None or self.__is_expired__(cached[1], current):
             value = self.execute(*args)
             if self.__expiration_stamp__ is not None:
                 current = self.__expiration_stamp__(*args)
@@ -79,6 +81,4 @@ class Memoizable:
         return time.time()
 
     def __expiration_stamp__(self, *args):
-        return time.time() + self.expire_in
-
-
+        return time.time() + self.__expire_in__
