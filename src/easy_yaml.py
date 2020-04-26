@@ -19,6 +19,8 @@ class EasyYaml(Memoizable):
             y = yaml.dump(obj, default_flow_style=False, sort_keys=False)
             sum_array = sum([1 for _ in split_array.finditer(y)])
             sum_dict = sum([1 for _ in split_dict.finditer(y)])
-            y = split_dict.sub('\n\\1', y) if sum_array < sum_dict else split_array.sub('\n- ', y)
+            y = split_dict.sub('\n\\1', y) \
+                if sum_array < sum_dict else \
+                split_array.sub('\n- ', y)
             fd.write(y.strip())
 

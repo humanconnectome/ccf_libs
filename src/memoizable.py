@@ -1,3 +1,10 @@
+import copy
+import hashlib
+import os
+import pickle
+import time
+
+
 def hashable(item):
     """Determine whether `item` can be hashed."""
     try:
