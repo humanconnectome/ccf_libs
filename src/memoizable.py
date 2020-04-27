@@ -54,7 +54,7 @@ class Memoizable:
                 current = self.__expiration_stamp__(*args)
             self.cache[args] = value, current
             self.save_cache()
-            return value
+            return copy.deepcopy(value)
         else:
             return copy.deepcopy(self.cache[args][0])
 
