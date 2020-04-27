@@ -105,6 +105,8 @@ class RedcapTable:
         :param forms:
         :return:
         """
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
         results = self.get_datadictionary(fields, forms)
         filename = os.path.join(directory, self.name + '.yaml')
         Y.write(filename, to_dict(results))
