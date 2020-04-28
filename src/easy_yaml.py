@@ -1,3 +1,5 @@
+import os
+
 import yaml
 import re
 
@@ -9,6 +11,9 @@ split_dict = re.compile('^(\S+:)', re.MULTILINE)
 class EasyYaml(Memoizable):
     def __init__(self, cache_file='.yaml_cache'):
         super().__init__(cache_file=cache_file, hashfunc=sha256)
+
+    def __preprocess_args__(self, path):
+        return os.path.abspath(path),
 
     def execute(self, path):
         with open(path, 'r') as f:

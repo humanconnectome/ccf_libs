@@ -42,6 +42,7 @@ class Memoizable:
         self.load_cache()
 
     def __call__(self, *args):
+        args = self.__preprocess_args__(*args)
         if not hashable(args):
             print("Uncacheable args.", args)
             return self.execute(*args)
@@ -57,6 +58,9 @@ class Memoizable:
             return copy.deepcopy(value)
         else:
             return copy.deepcopy(self.cache[args][0])
+
+    def __preprocess_args__(self, *args):
+        return args
 
     def load_cache(self):
         if os.path.exists(self.__cache_file__):
