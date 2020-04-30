@@ -111,10 +111,10 @@ class Memoizable:
         return current > cached
 
     def __current_stamp__(self, *args):
-        return time.time()
+        return time.time() - self.__expire_in__
 
     def __expiration_stamp__(self, *args):
-        return time.time() + self.__expire_in__
+        return time.time()
 
     def __repr__(self):
         """ Return base execute function's docstring. """
