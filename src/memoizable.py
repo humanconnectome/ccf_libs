@@ -74,22 +74,22 @@ class Memoizable:
             self.__is_expired__ = __not_equal__
         self.load_cache()
 
-    def __call__(self, *args):
-        hashedargs = self.__preprocess_args__(*args)
+    def __call__(self, *args, **kwargs):
+        hashedargs = self.__preprocess_args__(*args, **kwargs)
         cached = self.cache.get(hashedargs, None)
-        current = self.__current_stamp__(*args)
+        current = self.__current_stamp__(*args, **kwargs)
         if cached is None or self.__is_expired__(cached[1], current):
-            value = self.fresh(*args)
+            value = self.fresh(*args, **kwargs)
             if self.__expiration_stamp__ is not None:
-                current = self.__expiration_stamp__(*args)
+                current = self.__expiration_stamp__(*args, **kwargs)
             self.cache[hashedargs] = value, current
             self.save_cache()
             return copy.deepcopy(value)
         else:
             return copy.deepcopy(self.cache[hashedargs][0])
 
-    def __preprocess_args__(self, *args):
-        return tuplize(args)
+    def __preprocess_args__(self, *args, **kwargs):
+        return tuplize((*args, kwargs))
 
     def load_cache(self):
         if os.path.exists(self.__cache_file__):
@@ -103,17 +103,17 @@ class Memoizable:
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
-    def fresh(self, *args):
+    def fresh(self, *args, **kwargs):
         raise Exception("Executor not yet defined.")
         return False
 
     def __is_expired__(self, cached, current):
         return current > cached
 
-    def __current_stamp__(self, *args):
+    def __current_stamp__(self, *args, **kwargs):
         return time.time() - self.__expire_in__
 
-    def __expiration_stamp__(self, *args):
+    def __expiration_stamp__(self, *args, **kwargs):
         return time.time()
 
     def __repr__(self):
