@@ -194,10 +194,17 @@ def get_behavioral(study, fields=None, keep_withdrawn=False):
     s = config['behavioral'][study]
     fieldnames = s['fields']
     events = s['events']
+    list_of_fields = None
+    if fields != False:
+        list_of_fields = list(fieldnames.values())
+        if type(fields) is list:
+            list_of_fields += fields
+        elif type(fields) is str:
+            list_of_fields.append(fields)
+        else:
+            raise TypeError("Not sure what to do with specified fields.", fields)
     table = RedcapTable(s['token'])
-    fields = fields.copy() if fields else []
-    fields += list(fieldnames.values())
-    df = table.get_frame(fields, events)
+    df = table.get_frame(fields=list_of_fields, events=events)
     df.rename(columns={
         fieldnames['interview_date']: 'interview_date',
         fieldnames['field']: 'subjectid'
@@ -226,32 +233,4 @@ def get_behavioral(study, fields=None, keep_withdrawn=False):
 
 
 def get_full(study, keep_withdrawn=False):
-    s = config['behavioral'][study]
-    table = RedcapTable(s['token'])
-    df = table.get_frame(events=s['events'])
-    fieldnames = s['fields']
-    df.rename(columns={
-        fieldnames['interview_date']: 'interview_date',
-        fieldnames['field']: 'subjectid'
-    }, inplace=True)
-    df = df[df.subjectid.notna() & (df.subjectid != '')]
-    split_df = df.subjectid.str.split("_", 1, expand=True)
-    df['subject'] = split_df[0].str.strip()
-    df['flagged'] = split_df[1].str.strip()
-    df['study'] = study
-
-    if not keep_withdrawn:
-        df = df[df.flagged.isna()]
-
-    interview_date = pd.to_datetime(df.interview_date)
-    dob = pd.to_datetime(df.dob)
-    # interview age (in months, capped at 90 y.o.)
-    interview_age = (interview_date - dob) / np.timedelta64(1, 'M')
-    interview_age = interview_age.apply(np.floor).astype('Int64')
-    interview_age = interview_age.mask(interview_age > 1080, 1200)
-    df['interview_age'] = interview_age
-
-    if 'gender' in df.columns:
-        df.gender = df.gender.replace({1: 'M', 2: 'F'})
-
-    return df
+    return get_behavioral(study, False, keep_withdrawn)
