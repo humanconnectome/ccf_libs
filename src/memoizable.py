@@ -86,3 +86,7 @@ class Memoizable:
 
     def __expiration_stamp__(self, *args):
         return time.time() + self.__expire_in__
+
+    def __repr__(self):
+        """ Return base execute function's docstring. """
+        return self.fresh.__doc__
