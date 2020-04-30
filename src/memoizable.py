@@ -1,3 +1,4 @@
+from collections.abc import Hashable, Iterable
 import copy
 import hashlib
 import os
@@ -13,6 +14,38 @@ def hashable(item):
         return False
     return True
 
+def is_deep_hashable(item):
+    """Determine whether `item` can be hashed."""
+    try:
+        hash(item)
+    except TypeError:
+        return False
+    return True
+
+def is_hashable(item):
+    return isinstance(item, Hashable)
+
+def is_iterable(item):
+    return isinstance(item, Iterable)
+
+def is_dict(item):
+    return type(item) is dict
+
+def sort(item):
+    try:
+        return sorted(item)
+    except TypeError:
+        return item
+
+def tuplize(item):
+    if is_deep_hashable(item):
+        return item
+    elif is_dict(item):
+        return tuple(sort([(k, tuplize(v)) for k, v in item.items()]))
+    elif is_iterable(item):
+        return tuple(sort(tuple(map(tuplize, item))))
+    else:
+        raise Exception("Can't make hashable: ", item)
 
 def sha256(filename):
     """
@@ -42,25 +75,21 @@ class Memoizable:
         self.load_cache()
 
     def __call__(self, *args):
-        args = self.__preprocess_args__(*args)
-        if not hashable(args):
-            print("Uncacheable args.", args)
-            return self.fresh(*args)
-
-        cached = self.cache.get(args, None)
+        hashedargs = self.__preprocess_args__(*args)
+        cached = self.cache.get(hashedargs, None)
         current = self.__current_stamp__(*args)
         if cached is None or self.__is_expired__(cached[1], current):
             value = self.fresh(*args)
             if self.__expiration_stamp__ is not None:
                 current = self.__expiration_stamp__(*args)
-            self.cache[args] = value, current
+            self.cache[hashedargs] = value, current
             self.save_cache()
             return copy.deepcopy(value)
         else:
-            return copy.deepcopy(self.cache[args][0])
+            return copy.deepcopy(self.cache[hashedargs][0])
 
     def __preprocess_args__(self, *args):
-        return args
+        return tuplize(args)
 
     def load_cache(self):
         if os.path.exists(self.__cache_file__):
