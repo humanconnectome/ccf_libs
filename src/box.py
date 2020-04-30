@@ -5,12 +5,31 @@ from multiprocessing.dummy import Pool
 import pandas as pd
 from boxsdk import JWTAuth, OAuth2, Client
 
+from .memoizable import Memoizable
 from .config import LoadSettings
 
 config = LoadSettings()
 
 default_cache = config['root']['cache']
 default_config = config['config_files']['box']
+
+
+class CachedBox(Memoizable):
+    def __init__(self, cache_file='.box_cache', expire_in_days = 1):
+        self.box = LifespanBox()
+        super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
+
+    def fresh(self, fileId):
+        return self.box.readFile(fileId)
+
+    def read_csv(self, csv_file_id):
+        """ Read a csv file into a pandas dataframe. """
+        return pd.read_csv(self.__call__(csv_file_id))
+
+    def read_excel(self, csv_file_id):
+        """ Read an excel file into a pandas dataframe. """
+        return pd.read_excel(self.__call__(csv_file_id))
+
 
 class LifespanBox:
     def __init__(self, cache=default_cache, user='Lifespan Automation', config_file=default_config):
