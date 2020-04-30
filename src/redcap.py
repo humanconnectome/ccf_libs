@@ -4,6 +4,7 @@ import numpy as np
 import io
 import pandas as pd
 import requests
+from .memoizable import Memoizable
 
 from .easy_yaml import EasyYaml
 from .config import LoadSettings
@@ -53,6 +54,12 @@ def to_dict(df):
         newlist[name] = e
     return newlist
 
+class CachedRedcap(Memoizable):
+    def __init__(self, cache_file='.redcap_cache', expire_in_days = 7):
+        super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
+
+    def fresh(self, table_name, fields=None, events=None, forms=None):
+        return RedcapTable.get_table_by_name(table_name).get_frame(fields, events, forms)
 
 class RedcapTable:
     def __init__(self, token, url=None, name=None):
