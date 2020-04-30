@@ -15,11 +15,14 @@ default_config = config['config_files']['box']
 
 
 class CachedBox(Memoizable):
-    def __init__(self, cache_file='.box_cache', expire_in_days = 1):
-        self.box = LifespanBox()
+    def __init__(self, cache_file='.box_cache', expire_in_days = 1, **kwargs):
+        self.box = None
+        self.kwargs = kwargs
         super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
 
     def fresh(self, fileId):
+        if self.box is None:
+            self.box = LifespanBox(**self.kwargs)
         return self.box.readFile(fileId)
 
     def read_csv(self, csv_file_id):
