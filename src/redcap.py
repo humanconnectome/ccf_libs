@@ -54,12 +54,6 @@ def to_dict(df):
         newlist[name] = e
     return newlist
 
-class CachedRedcap(Memoizable):
-    def __init__(self, cache_file='.redcap_cache', expire_in_days = 7):
-        super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
-
-    def fresh(self, table_name, fields=None, events=None, forms=None):
-        return RedcapTable.get_table_by_name(table_name).get_frame(fields, events, forms)
 
 class RedcapTable:
     def __init__(self, token, url=None, name=None):
@@ -176,61 +170,67 @@ class RedcapTable:
         return list(range(n, n + count))
 
 
-def get_behavioral_ids(keep_parents=False):
-    dfs = [get_behavioral(study) \
-           for study in config['behavioral'].keys() \
-           if study != 'hcpdparents' or keep_parents
-           ]
+class CachedRedcap(Memoizable):
+    def __init__(self, cache_file='.redcap_cache', expire_in_days=7):
+        super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
 
-    return pd.concat(dfs, sort=False, ignore_index=True)
+    def fresh(self, table_name, fields=None, events=None, forms=None):
+        return RedcapTable.get_table_by_name(table_name).get_frame(fields, events, forms)
 
+    def get_behavioral_ids(self, keep_parents=False):
+        dfs = [self.get_behavioral(study) \
+               for study in config['behavioral'].keys() \
+               if study != 'hcpdparents' or keep_parents
+               ]
 
-def get_behavioral(study, fields=None, keep_withdrawn=False):
-    if study not in config['behavioral']:
-        # throw Exception('This study is not available. ' + study)
-        print('Error', 'This study is not available.', study)
-        return {}
+        return pd.concat(dfs, sort=False, ignore_index=True)
 
-    s = config['behavioral'][study]
-    fieldnames = s['fields']
-    events = s['events']
-    list_of_fields = None
-    if fields != False:
-        list_of_fields = list(fieldnames.values())
-        if type(fields) is list:
-            list_of_fields += fields
-        elif type(fields) is str:
-            list_of_fields.append(fields)
-        else:
-            raise TypeError("Not sure what to do with specified fields.", fields)
-    table = RedcapTable(s['token'])
-    df = table.get_frame(fields=list_of_fields, events=events)
-    df.rename(columns={
-        fieldnames['interview_date']: 'interview_date',
-        fieldnames['field']: 'subjectid'
-    }, inplace=True)
-    df = df[df.subjectid.notna() & (df.subjectid != '')]
-    split_df = df.subjectid.str.split("_", 1, expand=True)
-    df['subject'] = split_df[0].str.strip()
-    df['flagged'] = split_df[1].str.strip()
-    df['study'] = study
+    def get_behavioral(self, study, fields=None, keep_withdrawn=False):
+        if study not in config['behavioral']:
+            # throw Exception('This study is not available. ' + study)
+            print('Error', 'This study is not available.', study)
+            return {}
 
-    if not keep_withdrawn:
-        df = df[df.flagged.isna()]
+        s = config['behavioral'][study]
+        fieldnames = s['fields']
+        events = s['events']
+        list_of_fields = None
+        if fields != False:
+            list_of_fields = list(fieldnames.values())
+            if fields is None:
+                pass
+            elif type(fields) is list:
+                list_of_fields += fields
+            elif type(fields) is str:
+                list_of_fields.append(fields)
+            else:
+                raise TypeError("Not sure what to do with specified fields.", fields)
+        df = self.__call__(study, fields=list_of_fields, events=events)
+        df.rename(columns={
+            fieldnames['interview_date']: 'interview_date',
+            fieldnames['field']: 'subjectid'
+        }, inplace=True)
+        df = df[df.subjectid.notna() & (df.subjectid != '')]
+        split_df = df.subjectid.str.split("_", 1, expand=True)
+        df['subject'] = split_df[0].str.strip()
+        df['flagged'] = split_df[1].str.strip()
+        df['study'] = study
 
-    interview_date = pd.to_datetime(df.interview_date)
-    dob = pd.to_datetime(df.dob)
-    # interview age (in months, capped at 90 y.o.)
-    interview_age = (interview_date - dob) / np.timedelta64(1, 'M')
-    interview_age = interview_age.apply(np.floor).astype('Int64')
-    interview_age = interview_age.mask(interview_age > 1080, 1200)
-    df['interview_age'] = interview_age
+        if not keep_withdrawn:
+            df = df[df.flagged.isna()]
 
-    if 'gender' in df.columns:
-        df.gender = df.gender.replace({1: 'M', 2: 'F'})
+        interview_date = pd.to_datetime(df.interview_date)
+        dob = pd.to_datetime(df.dob)
+        # interview age (in months, capped at 90 y.o.)
+        interview_age = (interview_date - dob) / np.timedelta64(1, 'M')
+        interview_age = interview_age.apply(np.floor).astype('Int64')
+        interview_age = interview_age.mask(interview_age > 1080, 1200)
+        df['interview_age'] = interview_age
 
-    return df
+        if 'gender' in df.columns:
+            df.gender = df.gender.replace({1: 'M', 2: 'F'})
 
+        return df
 
-def get_full(study, keep_withdrawn=False):
-    return get_behavioral(study, False, keep_withdrawn)
+    def get_full(self, study, keep_withdrawn=False):
+        return self.get_behavioral(study, False, keep_withdrawn)
