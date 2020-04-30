@@ -45,12 +45,12 @@ class Memoizable:
         args = self.__preprocess_args__(*args)
         if not hashable(args):
             print("Uncacheable args.", args)
-            return self.execute(*args)
+            return self.fresh(*args)
 
         cached = self.cache.get(args, None)
         current = self.__current_stamp__(*args)
         if cached is None or self.__is_expired__(cached[1], current):
-            value = self.execute(*args)
+            value = self.fresh(*args)
             if self.__expiration_stamp__ is not None:
                 current = self.__expiration_stamp__(*args)
             self.cache[args] = value, current
@@ -74,7 +74,7 @@ class Memoizable:
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
-    def execute(self, *args):
+    def fresh(self, *args):
         raise Exception("Executor not yet defined.")
         return False
 

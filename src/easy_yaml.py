@@ -15,7 +15,7 @@ class EasyYaml(Memoizable):
     def __preprocess_args__(self, path):
         return os.path.abspath(path),
 
-    def execute(self, path):
+    def fresh(self, path):
         with open(path, 'r') as f:
             return yaml.load(f, yaml.SafeLoader)
 
