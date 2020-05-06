@@ -104,8 +104,7 @@ class Memoizable:
             pickle.dump(self.cache, f)
 
     def fresh(self, *args, **kwargs):
-        raise Exception("Executor not yet defined.")
-        return False
+        raise NotImplementedError("Please override the run function.")
 
     def __is_expired__(self, cached, current):
         return current > cached
