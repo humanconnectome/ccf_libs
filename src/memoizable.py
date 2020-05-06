@@ -79,7 +79,7 @@ class Memoizable:
         cached = self.cache.get(hashedargs, None)
         current = self.__current_stamp__(*args, **kwargs)
         if cached is None or self.__is_expired__(cached[1], current):
-            value = self.fresh(*args, **kwargs)
+            value = self.run(*args, **kwargs)
             if self.__expiration_stamp__ is not None:
                 current = self.__expiration_stamp__(*args, **kwargs)
             self.cache[hashedargs] = value, current
@@ -103,7 +103,7 @@ class Memoizable:
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
-    def fresh(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         raise NotImplementedError("Please override the run function.")
 
     def __is_expired__(self, cached, current):
@@ -117,4 +117,4 @@ class Memoizable:
 
     def __repr__(self):
         """ Return base execute function's docstring. """
-        return self.fresh.__doc__
+        return self.run.__doc__

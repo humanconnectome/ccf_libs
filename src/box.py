@@ -20,7 +20,7 @@ class CachedBox(Memoizable):
         self.kwargs = kwargs
         super().__init__(cache_file=cache_file, expire_in_days=expire_in_days)
 
-    def fresh(self, fileId):
+    def run(self, fileId):
         if self.box is None:
             self.box = LifespanBox(**self.kwargs)
         return self.box.readFile(fileId)
