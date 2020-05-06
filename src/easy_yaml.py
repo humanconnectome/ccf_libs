@@ -22,8 +22,8 @@ class EasyYaml(Memoizable):
     def write(self, filename, obj):
         with open(filename, 'w') as fd:
             y = yaml.dump(obj, default_flow_style=False, sort_keys=False)
-            sum_array = sum([1 for _ in split_array.finditer(y)])
-            sum_dict = sum([1 for _ in split_dict.finditer(y)])
+            sum_array = sum(1 for _ in split_array.finditer(y))
+            sum_dict = sum(1 for _ in split_dict.finditer(y))
             y = split_dict.sub('\n\\1', y) \
                 if sum_array < sum_dict else \
                 split_array.sub('\n- ', y)
