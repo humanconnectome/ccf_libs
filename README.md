@@ -5,7 +5,7 @@ This is a library of utilities used by the CCF for managing data on Redcap and B
 Create and activate a virtual environment. Then run:
 
 ```
-pip install git+https://github.com/mobalt/ccf_libs --upgrade
+pip install git+https://github.com/humanconnectome/ccf_libs --upgrade
 ```
 
 ## Usage
