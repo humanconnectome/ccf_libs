@@ -54,10 +54,11 @@ def sha256(filename):
     sha256_hash = hashlib.sha256()
     with open(filename, "rb") as f:
         # Read and update hash string value in blocks of 4K
-        while chunk := f.read(8192):
+        chunk = f.read(8192)
+        while len(chunk) > 0:
             sha256_hash.update(chunk)
+            chunk = f.read(8192)
     return sha256_hash.hexdigest()
-
 
 def __not_equal__(a, b):
     return a != b
