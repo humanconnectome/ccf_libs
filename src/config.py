@@ -3,6 +3,7 @@ import yaml
 
 
 def load_yaml(filename):
+    filename = os.path.expanduser(filename)
     if not os.path.exists(filename):
         return {}
 
@@ -26,6 +27,7 @@ def LoadSettings(filename='./config.yml'):
     Load the settings from a yaml file and a secrets file. The settings from
     the secrets file will override the settings from the config.yaml file.
     """
+    filename = os.path.expanduser(filename)
     config = load_yaml(filename)
     secrets_filename = config.get('secrets')
 
