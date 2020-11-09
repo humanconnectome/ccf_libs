@@ -81,7 +81,7 @@ class RedcapTable:
         data['token'] = self.token
         r = requests.post(self.url, data)
         if r.status_code != 200:
-            raise Exception("There was a problem with the request.", r.content)
+            raise Exception("%s: Problem with the request." % self.name, r.json())
         return r
 
     def get_datadictionary(self, fields=None, forms=None):
