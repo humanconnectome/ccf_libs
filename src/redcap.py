@@ -212,7 +212,10 @@ class CachedRedcap(Memoizable):
             fieldnames['interview_date']: 'interview_date',
             fieldnames['field']: 'subjectid'
         }, inplace=True)
-        df = df[df.subjectid.notna() & (df.subjectid != '')]
+
+
+        # All of the fields below might only be defined on the first event, if that is the case
+        # subsequent events will all be NA on these fields. Might need to do some `join` magic to fill in the NAs.
         split_df = df.subjectid.str.split("_", 1, expand=True)
         df['subject'] = split_df[0].str.strip()
         df['flagged'] = split_df[1].str.strip()
