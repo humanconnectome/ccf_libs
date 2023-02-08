@@ -6,7 +6,7 @@ certifi==2022.9.24
 cffi==1.15.1
 chardet==5.0.0
 charset-normalizer==2.1.1
-cryptography==38.0.1
+cryptography==39.0.1
 et-xmlfile==1.1.0
 idna==3.4
 jdcal==1.4.1
